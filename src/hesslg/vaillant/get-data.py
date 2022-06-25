@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import aiohttp
 import asyncio
-
+from datetime import datetime
 import yaml
 
 from pymultimatic.api import Connector, ApiError, urls
@@ -40,12 +40,13 @@ async def _get_multimatic_live_data(user, password):
 
         for key in responses:
             reports = responses[key]["body"]["devices"]
-            for report_group in reports:
+            meta = responses[key]["meta"]["resourceState"]
+            for report_group, report_meta in zip(reports, meta):
                 for report in report_group["reports"]:
-                    data[report["name"]
-                         + " ("
-                         + report["unit"]
-                         + ")"] = report["value"]
+                    datetime_obj = datetime.utcfromtimestamp(report_meta["timestamp"])
+                    timestamp = datetime_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    data[report["_id"] + " (timestamp)"] = timestamp
+                    data[report["_id"] + " (" + report["unit"] + ")"] = report["value"]
 
         return data
 
