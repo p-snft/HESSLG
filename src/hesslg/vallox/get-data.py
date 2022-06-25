@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import asyncio
-from pprint import pprint
 from vallox_websocket_api import Client
 
 VALLOX_510_MV_IP = '192.168.178.29'
