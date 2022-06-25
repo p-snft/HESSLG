@@ -3,6 +3,7 @@
 import aiohttp
 import asyncio
 from datetime import datetime
+import sys
 import yaml
 
 from pymultimatic.api import Connector, ApiError, urls
@@ -64,7 +65,11 @@ def print_multimatic_live_data(username, password):
 
 
 if __name__ == "__main__":
-    with open("../settings.yaml", "r") as settings_file:
+    if len(sys.argv) > 1:
+        settings_file_name = sys.argv[1]
+    else:
+        settings_file_name = "../settings.yaml"
+    with open(settings_file_name, "r") as settings_file:
         settings = yaml.safe_load(settings_file)
     username = settings["multimatic"]["username"]
     password = settings["multimatic"]["password"]
