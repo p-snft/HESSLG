@@ -33,9 +33,9 @@ def get_temperatures():
         vals = line.split(",")
         vals = [val.strip() for val in vals]
         if len(vals) == 8:
-        adc_count = np.array([int(val) for val in vals[::2]])
-        voltage = np.array([float(val) for val in vals[1::2]])
-        break
+        	adc_count = np.array([int(val) for val in vals[::2]])
+        	voltage = np.array([float(val) for val in vals[1::2]])
+        	break
 
     # rather large tollerance because assert is meant for read-in errors
     assert np.allclose(voltage, adc_count/1024*5.0, rtol=0.1)
