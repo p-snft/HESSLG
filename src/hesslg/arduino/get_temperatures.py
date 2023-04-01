@@ -40,9 +40,9 @@ def get_temperatures():
     # rather large tollerance because assert is meant for read-in errors
     assert np.allclose(voltage, adc_count/1024*5.0, rtol=0.1)
 
-    temperatures = adc_count/1024*5.0*(upper_temperatures-lower_temperatures)/10.0
+    return adc_count/1024*5.0*(upper_temperatures-lower_temperatures)/10.0
 
 if __name__ == "__main__":
     timestamp = datetime.datetime.now().astimezone().isoformat()
-    print("{},{:.2f},{:.2f},{:.2f},{:.2f}".format(timestamp, *temperatures))
+    print("{},{:.2f},{:.2f},{:.2f},{:.2f}".format(timestamp, *get_temperatures()))
 
