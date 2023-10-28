@@ -1,5 +1,5 @@
 aiohttp
 pandas>=1.3.5
-pymultimatic>=0.6.7
+myPyllant>=0.5.10
 vallox_websocket_api>=2.8.1
 pyyaml

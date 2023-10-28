@@ -1,64 +1,59 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import aiohttp
+
 import asyncio
 from datetime import datetime
+from dataclasses import asdict
 import sys
 import yaml
 
-from pymultimatic.api import Connector, ApiError, urls
-from pymultimatic.model import mapper
+from myPyllant.api import MyPyllantAPI
 
 
-async def _get_multimatic_live_data(user, password):
-    async with aiohttp.ClientSession() as sess:
-
-        connector = Connector(user, password, sess)
-
-        try:
-            await connector.login(True)
-        except ApiError as err:
-            print('Cannot login: ' + await err.response.text())
-
-        facilities = await connector.get(urls.facilities_list())
-        serial = mapper.map_serial_number(facilities)
-
-        requests = {}
-        params = {'serial': serial}
-        req = connector.get(urls.live_report(**params))
-        requests.update({urls.live_report.__name__: req})
-
-        responses = {}
-        for key in requests:
-            try:
-                responses.update({key: await requests[key]})
-            except ApiError as api_err:
-                responses.update({key: api_err.response})
-            except err:
-                print('Cannot get response for {}, skipping it'.format(key))
-
-        data = dict()
-
-        for key in responses:
-            reports = responses[key]["body"]["devices"]
-            meta = responses[key]["meta"]["resourceState"]
-            for report_group, report_meta in zip(reports, meta):
-                for report in report_group["reports"]:
-                    datetime_obj = datetime.utcfromtimestamp(report_meta["timestamp"])
-                    timestamp = datetime_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    data[report["_id"] + " (timestamp)"] = timestamp
-                    data[report["_id"] + " (" + report["unit"] + ")"] = report["value"]
-
+async def _get_myvaillant_live_data(
+        user,
+        password,
+        brand="vaillant",
+        country="germany",
+):
+    async with MyPyllantAPI(user, password, brand, country) as api:
+        data = []
+        async for system in api.get_systems():
+            data.append(asdict(system))
         return data
 
 
-def get_multimatic_live_data(username, password):
-    return asyncio.get_event_loop().run_until_complete(
-        _get_multimatic_live_data(username, password))
+def get_myvaillant_live_data(username, password):
+    data = asyncio.get_event_loop().run_until_complete(
+        _get_myvaillant_live_data(
+            username,
+            password,
+        )
+    )
+    system_status = data[0]['state']['system']
+    home_status = data[0]['state']['zones'][0]
+    circuit_status = data[0]['state']['circuits'][0]
+    dhw_status = data[0]['state']['dhw'][0]
+
+    live_data = {
+        "timestamp": (data[0]['devices'][0]['last_data']).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "outdoor temperature (°C)": system_status['outdoor_temperature'],
+        "24 h average outdoor temperature (°C)": system_status['outdoor_temperature_average24h'],
+        "flow temperature (°C)": system_status['system_flow_temperature'],
+        "water pressure (bar)": system_status['system_water_pressure'],
+        "circuit state": circuit_status['circuit_state'],
+        "circuit temperature (°C)": circuit_status['current_circuit_flow_temperature'],
+        "room temperature setpoint (°C)": home_status['desired_room_temperature_setpoint_heating'],
+        "room temperature (°C)": home_status['current_room_temperature'],
+        "dhw temperature (°C)": dhw_status['current_dhw_temperature'],
+        "dhw state": dhw_status['current_special_function'],
+    }
+
+    return live_data
 
 
 def print_multimatic_live_data(username, password):
-    data = get_multimatic_live_data(username, password)
+    data = get_myvaillant_live_data(username, password)
 
     print(*list(data.keys()), sep=", ")
     print(*list(data.values()), sep=", ")
