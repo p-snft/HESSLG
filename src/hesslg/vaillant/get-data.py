@@ -4,6 +4,7 @@
 import asyncio
 from datetime import datetime
 from dataclasses import asdict
+from influxdb import InfluxDBClient
 import sys
 import yaml
 
@@ -37,26 +38,52 @@ def get_myvaillant_live_data(username, password):
 
     live_data = {
         "timestamp": (data[0]['devices'][0]['last_data']).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "outdoor temperature (°C)": system_status['outdoor_temperature'],
-        "24 h average outdoor temperature (°C)": system_status['outdoor_temperature_average24h'],
-        "flow temperature (°C)": system_status['system_flow_temperature'],
-        "water pressure (bar)": system_status['system_water_pressure'],
-        "circuit state": circuit_status['circuit_state'],
-        "circuit temperature (°C)": circuit_status['current_circuit_flow_temperature'],
-        "room temperature setpoint (°C)": home_status['desired_room_temperature_setpoint_heating'],
-        "room temperature (°C)": home_status['current_room_temperature'],
-        "dhw temperature (°C)": dhw_status['current_dhw_temperature'],
-        "dhw state": dhw_status['current_special_function'],
+        "outdoor_temperature": system_status['outdoor_temperature'],
+        "outdoor_temperature_average24h": system_status['outdoor_temperature_average24h'],
+        "system_flow_temperature": system_status['system_flow_temperature'],
+        "system_water_pressure": system_status['system_water_pressure'],
+        "circuit_state": circuit_status['circuit_state'],
+        "current_circuit_flow_temperature": circuit_status['current_circuit_flow_temperature'],
+        "desired_room_temperature_setpoint_heating": home_status['desired_room_temperature_setpoint_heating'],
+        "current_room_temperature": home_status['current_room_temperature'],
+        "current_dhw_temperature": dhw_status['current_dhw_temperature'],
+        "dhw_state": dhw_status['current_special_function'],
     }
 
     return live_data
 
 
-def print_multimatic_live_data(username, password):
-    data = get_myvaillant_live_data(username, password)
-
+def print_myvaillant_live_data(data):
     print(*list(data.keys()), sep=", ")
     print(*list(data.values()), sep=", ")
+
+def store_myvaillant_live_data(data):
+    client = InfluxDBClient(database='hesslig')
+
+    def _datapoint_dict(label):
+        datapoint_dict = {
+                "measurement": label,
+                "tags": {
+                    "type": "measurement",
+                    "source": "vaillant"
+                },
+                "fields": {
+                    "value": data[label]
+                }
+            }
+        return datapoint_dict
+
+    json_body = [
+        _datapoint_dict("outdoor_temperature"),
+        _datapoint_dict("system_flow_temperature"),
+        _datapoint_dict("system_water_pressure"),
+        _datapoint_dict("current_circuit_flow_temperature"),
+        _datapoint_dict("current_room_temperature"),
+        _datapoint_dict("current_dhw_temperature")
+    ]
+
+    client.write_points(json_body)
+
 
 
 if __name__ == "__main__":
@@ -68,6 +95,6 @@ if __name__ == "__main__":
         settings = yaml.safe_load(settings_file)
     username = settings["multimatic"]["username"]
     password = settings["multimatic"]["password"]
-    print_multimatic_live_data(username, password)
-
-
+    data = get_myvaillant_live_data(username, password)
+    print_myvaillant_live_data(data)
+    store_myvaillant_live_data(data)
