@@ -58,7 +58,7 @@ def print_myvaillant_live_data(data):
     print(*list(data.values()), sep=", ")
 
 def store_myvaillant_live_data(data):
-    client = InfluxDBClient(database='hesslig')
+    client = InfluxDBClient(database='hesslg')
 
     def _datapoint_dict(label):
         datapoint_dict = {
