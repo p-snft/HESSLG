@@ -3,6 +3,33 @@ import datetime
 import numpy as np
 import time
 import serial
+from influxdb import InfluxDBClient
+
+
+def store_temeprature_data(data):
+    client = InfluxDBClient(database='hesslg')
+
+    def _datapoint_dict(label, value):
+        datapoint_dict = {
+                "measurement": label,
+                "tags": {
+                    "type": "measurement",
+                    "source": "Arduino"
+                },
+                "fields": {
+                    "value": value
+                }
+            }
+        return datapoint_dict
+
+    json_body = [
+        _datapoint_dict("dhhe_pipe_1_temperature", data[0]),
+        _datapoint_dict("dhhe_pipe_2_temperature", data[1]),
+        _datapoint_dict("dhw_pipe_temperature", data[2]),
+        _datapoint_dict("circulation_pipe_temperature", data[3]),
+    ]
+
+    client.write_points(json_body)
 
 upper_temperatures = np.array([
     40,
@@ -33,9 +60,9 @@ def get_temperatures():
         vals = line.split(",")
         vals = [val.strip() for val in vals]
         if len(vals) == 8:
-        	adc_count = np.array([int(val) for val in vals[::2]])
-        	voltage = np.array([float(val) for val in vals[1::2]])
-        	break
+            adc_count = np.array([int(val) for val in vals[::2]])
+            voltage = np.array([float(val) for val in vals[1::2]])
+            break
 
     # rather large tollerance because assert is meant for read-in errors
     assert np.allclose(voltage, adc_count/1024*5.0, rtol=0.1)
@@ -44,5 +71,7 @@ def get_temperatures():
 
 if __name__ == "__main__":
     timestamp = datetime.datetime.now().astimezone().isoformat()
-    print("{},{:.2f},{:.2f},{:.2f},{:.2f}".format(timestamp, *get_temperatures()))
+    data = get_temperatures()
+    store_temeprature_data(data)
+    print("{},{:.2f},{:.2f},{:.2f},{:.2f}".format(timestamp, *data))
 
