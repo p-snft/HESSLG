@@ -7,11 +7,11 @@ from influxdb import InfluxDBClient
 
 VALLOX_510_MV_IP = '192.168.178.29'
 
-client = Client(VALLOX_510_MV_IP)
+vallox_client = Client(VALLOX_510_MV_IP)
 
 
 async def fetch_current():
-    data = await client.fetch_metrics([
+    data = await vallox_client.fetch_metrics([
         'A_CYC_CO2_VALUE',
         'A_CYC_EXTRACT_EFFICIENCY',
         'A_CYC_FAN_SPEED',
@@ -25,7 +25,7 @@ async def fetch_current():
     ])
 
 
-    client = InfluxDBClient(database='hesslg')
+    influx_client = InfluxDBClient(database='hesslg')
 
     def _datapoint_dict(label):
         datapoint_dict = {
@@ -48,7 +48,7 @@ async def fetch_current():
         _datapoint_dict("A_CYC_TEMP_SUPPLY_CELL_AIR")
     ]
 
-    client.write_points(json_body)
+    influx_client.write_points(json_body)
 
     print(*list(data.keys()), sep=", ")
     print(*list(data.values()), sep=", ")
