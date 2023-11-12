@@ -10,11 +10,18 @@ This is part of a longer pipeline:
 import sys
 from datetime import datetime
 
+from influxdb import InfluxDBClient
+
 if len(sys.argv) != 2 or sys.argv[1][-4:] != ".txt":
     print("Usage: " + sys.argv[0] + " (meter-file).txt")
     sys.exit()
 
 FILE_BASENAME = sys.argv[1][:-4]
+
+influx_client = InfluxDBClient(database='hesslg')
+
+bought = 0.0
+sold = 0.0
 
 with open(FILE_BASENAME + ".txt", 'r') as meter_file:
     content = meter_file.read().split('\n')
@@ -28,3 +35,27 @@ with open(FILE_BASENAME + ".txt", 'r') as meter_file:
     sold = float(content[2].split('#')[1])
 
     print(timestamp.strftime(time_format_user_friendly) + "," + str(bought) + "," + str(sold))
+
+json_body = [
+    {
+                "measurement": "total bought electricity",
+                "tags": {
+                    "type": "measurement",
+                    "source": "dzg"
+                },
+                "fields": {
+                    "value": bought
+                }
+            }, {
+                "measurement": "total sold electricity",
+                "tags": {
+                    "type": "measurement",
+                    "source": "dzg"
+                },
+                "fields": {
+                    "value": sold
+                }
+    }
+]
+
+influx_client.write_points(json_body)
