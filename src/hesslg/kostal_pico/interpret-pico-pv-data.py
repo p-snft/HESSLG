@@ -55,7 +55,7 @@ def store_piko_live_data(data):
             "fields": {
                 "value": data['produced (W)'].iloc[-1]
             },
-            "timestamp": data.index[-1].tz_localize(tz='Europe/Berlin').timestamp()
+            "time": data.index[-1].tz_localize(tz='Europe/Berlin').tz_convert('UTC')
         }
     ]
 
