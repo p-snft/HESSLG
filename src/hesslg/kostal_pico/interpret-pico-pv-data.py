@@ -45,18 +45,23 @@ produced_df.to_csv(JSON_FILE_BASENAME+".csv",
 client = InfluxDBClient(database='hesslg')
 
 def store_piko_live_data(data):
-    json_body = [
-        {
+
+    def datapoint(point):
+        return {
             "measurement": "PV Power",
             "tags": {
                 "type": "measurement",
                 "source": "kostal pico"
             },
             "fields": {
-                "value": data['produced (W)'].iloc[-1]
+                "value": point[1][0]
             },
-            "time": data.index[-1].tz_localize(tz='Europe/Berlin').tz_convert('UTC')
+            "time": point[0].tz_localize(tz='Europe/Berlin')
         }
+
+
+    json_body = [
+        datapoint(item) for item in data.iterrows()
     ]
 
     client.write_points(json_body)
