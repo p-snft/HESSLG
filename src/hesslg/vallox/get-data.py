@@ -41,6 +41,11 @@ async def fetch_current():
         return datapoint_dict
 
     json_body = [
+        _datapoint_dict('A_CYC_CO2_VALUE'),
+        _datapoint_dict('A_CYC_EXTRACT_EFFICIENCY'),
+        _datapoint_dict('A_CYC_FAN_SPEED'),
+        _datapoint_dict('A_CYC_HOME_AIR_TEMP_TARGET'),
+        _datapoint_dict('A_CYC_RH_VALUE'),
         _datapoint_dict("A_CYC_TEMP_EXHAUST_AIR"),
         _datapoint_dict("A_CYC_TEMP_EXTRACT_AIR"),
         _datapoint_dict("A_CYC_TEMP_OUTDOOR_AIR"),
