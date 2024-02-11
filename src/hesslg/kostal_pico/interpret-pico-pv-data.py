@@ -30,14 +30,16 @@ for dataset in data:
     produced_date = datetime.strptime(
         dataset['Timestamp'],
         "%Y-%m-%d")
-    produced_step = dataset['Offset']
-    produced_hour = produced_step//6
-    produced_minute = produced_step%6*10
+    step_before_production = dataset['Offset'] - 1
+    produced_hour = step_before_production//6
+    produced_minute = step_before_production%6*10
 
-    produced_start = produced_date + timedelta(hours = produced_hour,
-                                                minutes = produced_minute)
+    produced_start = produced_date + timedelta(
+        hours = produced_hour,
+        minutes = produced_minute,
+    )
 
-    produced_data = np.array(dataset['Data'])
+    produced_data = np.array([0] + dataset['Data'])
     produced_time = [produced_start + i*timedelta(minutes=10)
                         for i in range(len(produced_data))]
 
