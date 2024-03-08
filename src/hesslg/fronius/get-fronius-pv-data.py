@@ -28,14 +28,24 @@ client = InfluxDBClient(database='hesslg')
 
 json_body = [
     {
-        "measurement": "MeterData0",
+        "measurement": "EnergyReal_WAC_Minus_Absolute",
         "tags": {
             "type": "measurement",
             "source": "Fronius Smart Meter TS 65A-3"
         },
         "fields": {
-            "EnergyReal_WAC_Minus_Absolute": meter_data["EnergyReal_WAC_Minus_Absolute"],
-            "EnergyReal_WAC_Plus_Absolute": meter_data["EnergyReal_WAC_Plus_Absolute"],
+            "value": meter_data["EnergyReal_WAC_Minus_Absolute"],
+
+        },
+        "time": meter_data["TimeStamp"]
+    }, {
+        "measurement": "EnergyReal_WAC_Plus_Absolute",
+        "tags": {
+            "type": "measurement",
+            "source": "Fronius Smart Meter TS 65A-3"
+        },
+        "fields": {
+            "value": meter_data["EnergyReal_WAC_Plus_Absolute"],
 
         },
         "time": meter_data["TimeStamp"]
@@ -50,16 +60,23 @@ json_body = [
         },
         "time": inverter_data["Head"]["Timestamp"]
     }, {
-        "measurement": "StorageData",
+        "measurement": "Battery_SOC",
         "tags": {
             "type": "measurement",
             "source": "BYD Battery-Box Premium HV",
         },
         "fields": {
-            "StateOfCharge_Relative": storage_data["StateOfCharge_Relative"],
-            "Temperature_Cell": storage_data["Temperature_Cell"],
+            "value": storage_data["StateOfCharge_Relative"],
         },
-        "time": storage_data["TimeStamp"]
+    }, {
+        "measurement": "Battery_Temperature",
+        "tags": {
+            "type": "measurement",
+            "source": "BYD Battery-Box Premium HV",
+        },
+        "fields": {
+            "value": storage_data["Temperature_Cell"],
+        },
     }
 ]
 
