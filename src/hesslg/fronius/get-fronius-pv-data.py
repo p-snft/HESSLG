@@ -46,7 +46,7 @@ json_body = [
             "source": "Fronius Inverter"
         },
         "fields": {
-            "Produced": inverter_data["Body"]["Data"]["TOTAL_ENERGY"]["Values"]["1"],
+            "value": inverter_data["Body"]["Data"]["TOTAL_ENERGY"]["Values"]["1"],
         },
         "time": inverter_data["Head"]["Timestamp"]
     }, {
@@ -62,7 +62,5 @@ json_body = [
         "time": storage_data["TimeStamp"]
     }
 ]
-
-print(json_body)
 
 client.write_points(json_body)
