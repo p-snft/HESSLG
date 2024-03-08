@@ -4,7 +4,7 @@ import json
 import requests
 import sys
 
-# from influxdb import InfluxDBClient
+from influxdb import InfluxDBClient
 
 if len(sys.argv) != 2:
     print("Usage: " + sys.argv[0] + " (host)")
