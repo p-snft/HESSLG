@@ -16,15 +16,33 @@ else:
 FRONIUS_API_STRING = "/solar_api/v1/"
 
 def get_data(cgi_code):
-    url = "http://" + FRONIUS_INVERTER_HOSTNAME + FRONIUS_API_STRING + cgi_code + ".cgi"
+    url = "http://" + FRONIUS_INVERTER_HOSTNAME + FRONIUS_API_STRING + cgi_code
     return json.loads(requests.get(url).text)
 
 
-meter_data = get_data("GetMeterRealtimeData")["Body"]["Data"]["0"]
-inverter_data = get_data("GetInverterRealtimeData")
-storage_data = get_data("GetStorageRealtimeData")["Body"]["Data"]["0"]["Controller"]
+meter_data = get_data("GetMeterRealtimeData.cgi")["Body"]["Data"]["0"]
+inverter_data = get_data("GetInverterRealtimeData.cgi")
+storage_data = get_data("GetStorageRealtimeData.cgi")["Body"]["Data"]["0"]["Controller"]
+power_flow_data = get_data("GetPowerFlowRealtimeData.fcgi")
+power_flow_time = power_flow_data["Head"]["Timestamp"]
+power_flow_data = power_flow_data["Body"]["Data"]["Site"]
 
 client = InfluxDBClient(database='hesslg')
+
+
+def power_flow(feature_string):
+    return {
+        "measurement": feature_string,
+        "tags": {
+            "type": "measurement",
+            "source": "Fronius Inverter",
+        },
+        "fields": {
+            "value": power_flow_data[feature_string],
+        },
+        "time": power_flow_time,
+    }
+
 
 json_body = [
     {
@@ -77,7 +95,11 @@ json_body = [
         "fields": {
             "value": storage_data["Temperature_Cell"],
         },
-    }
+    },
+    power_flow("P_Akku"),
+    power_flow("P_Grid"),
+    power_flow("P_Load"),
+    power_flow("P_PV"),
 ]
 
 client.write_points(json_body)
