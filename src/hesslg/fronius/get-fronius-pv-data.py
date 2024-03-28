@@ -25,7 +25,7 @@ inverter_data = get_data("GetInverterRealtimeData.cgi")
 storage_data = get_data("GetStorageRealtimeData.cgi")["Body"]["Data"]["0"]["Controller"]
 power_flow_data = get_data("GetPowerFlowRealtimeData.fcgi")
 power_flow_time = power_flow_data["Head"]["Timestamp"]
-power_flow_data = power_flow_data["Body"]["Data"]["Site"]
+power_flow_site = power_flow_data["Body"]["Data"]["Site"]
 
 client = InfluxDBClient(database='hesslg')
 
@@ -38,7 +38,7 @@ def power_flow(feature_string):
             "source": "Fronius Inverter",
         },
         "fields": {
-            "value": power_flow_data[feature_string],
+            "value": power_flow_site[feature_string],
         },
         "time": power_flow_time,
     }
@@ -94,6 +94,34 @@ json_body = [
         },
         "fields": {
             "value": storage_data["Temperature_Cell"],
+        },
+    }, {
+        "measurement": "P_PV_extra",
+        "tags": {
+            "type": "measurement",
+            "source": "Fronius Smart Meter TS 65A-3",
+        },
+        "fields": {
+            "value": power_flow_data["Body"]["Data"]["SecondaryMeters"]["1"]["P"],
+        },
+    }, {
+        "measurement": "P_PV_total",
+        "tags": {
+            "type": "derived",
+        },
+        "fields": {
+            "value":
+                power_flow_data["Body"]["Data"]["SecondaryMeters"]["1"]["P"]
+                + power_flow_site["P_PV"]
+        },
+    }, {
+        "measurement": "P_HP",
+        "tags": {
+            "type": "measurement",
+            "source": "Fronius Smart Meter TS 65A-3",
+        },
+        "fields": {
+            "value": power_flow_data["Body"]["Data"]["SecondaryMeters"]["2"]["P"],
         },
     },
     power_flow("P_Akku"),
